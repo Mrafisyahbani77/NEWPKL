@@ -1,35 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useMemo } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+// routes
+import Router from "../src/routes/index";
+// theme
+import ThemeProvider from "../src/theme";
+// hooks
+import { useScrollToTop } from "../src/hooks/use-scroll-to-top";
+// components
+import ProgressBar from "../src/components/progress-bar";
+import { MotionLazy } from "../src/components/animate/motion-lazy";
+import SnackbarProvider from "../src/components/snackbar/snackbar-provider";
+import { SettingsProvider, SettingsDrawer } from "../src/components/settings";
+
+// auth
+import { AuthProvider, AuthConsumer } from "../src/auth/context/jwt";
+import { QueryClient, QueryClientProvider } from "react-query";
+
+// ----------------------------------------------------------------------
+
+export default function App() {
+  useScrollToTop();
+
+  const queryClient = useMemo(() => {
+    return new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+          refetchOnReconnect: true,
+          suspense: true,
+        },
+      },
+    });
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <LocalizationProvider>
+          <SettingsProvider
+            defaultSettings={{
+              themeMode: "light", // 'light' | 'dark'
+              themeDirection: "ltr", //  'rtl' | 'ltr'
+              themeContrast: "default", // 'default' | 'bold'
+              themeLayout: "vertical", // 'vertical' | 'horizontal' | 'mini'
+              themeColorPresets: "default", // 'default' | 'cyan' | 'purple' | 'blue' | 'orange' | 'red'
+              themeStretch: false,
+            }}
+          >
+            <ThemeProvider>
+              <MotionLazy>
+                <SnackbarProvider>
+                  <SettingsDrawer />
+                  <ProgressBar />
+                  <AuthConsumer>
+                    <Router />
+                  </AuthConsumer>
+                </SnackbarProvider>
+              </MotionLazy>
+            </ThemeProvider>
+          </SettingsProvider>
+        </LocalizationProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
 }
-
-export default App
